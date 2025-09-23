@@ -1,4 +1,6 @@
 use std::time::Instant;
+use std::thread;
+
 fn idk(row:i32,output:bool){ //the way i think
     if row == 0 {()}
     else if row==1 && output {println!("1");}
@@ -44,8 +46,8 @@ fn idk2(row:i32,output:bool){ //the way i think
                 }
             }
             let skip_count = if i%2 == 0 {0} else {1};
-            for item in new_number.clone().iter().rev().skip(skip_count){
-                new_number.push(*item)
+            for item in 0..new_number.len()-skip_count{
+                new_number.push(new_number[item])
             }
             number.clear();
             let mut a_line:String = "1 ".to_string();
@@ -78,33 +80,39 @@ fn idk3(row:i32,output:bool){  //the way i find on internet
     }
 }
 fn main() {
-    let run_time = 1;
-    let row = 12;
-    let output = true;
-    println!("\x1B[2J\x1B[H--- [0/3]");
-    let start = Instant::now();
-    for _ in 0..run_time{
-    idk(row,output);
-    }
-    let end = start.elapsed();
-    //println!("\x1B[2J\x1B[H#-- [1/3]");
+    let run_time: u128 = 10000;
+    let row: i32 = 12;
+    let output: bool = true;
 
-    let start2 = Instant::now();
-    for _ in 0..run_time{
-    idk2(row,output);
-    }
-    let end2 = start2.elapsed();
-    //println!("\x1B[2J\x1B[H##- [2/3]");
+    let func1 = thread::spawn(move ||{
+        let start = Instant::now();
+        for _ in 0..run_time{
+        idk(row,output);
+        }
+        Instant::now() - start
+    });
 
-    let start3 = Instant::now();
-    for _ in 0..run_time{
-    idk3(row,output);
-    }
-    let end3 = start3.elapsed();
-    //println!("\x1B[2J\x1B[H### [3/3]");
+    let func2 = thread::spawn(move ||{
+        let start = Instant::now();
+        for _ in 0..run_time{
+        idk2(row,output);
+        }
+        Instant::now() - start
+    });
 
+    let func3 = thread::spawn(move ||{
+        let start = Instant::now();
+        for _ in 0..run_time{
+        idk3(row,output);
+        }
+        Instant::now() - start
+    });
 
-    println!("idk run 100 times / 100 = {:?}",end/run_time);
-    println!("idk2 run 100 times / 100 = {:?}",end2/run_time);
-    println!("idk3 run 100 times / 100 = {:?}",end3/run_time);
+    let end = func1.join().unwrap();
+    let end2 = func2.join().unwrap();
+    let end3 = func3.join().unwrap();
+
+    println!("idk run {} times / {} = {:?}µs",run_time,run_time,end.as_micros() as f64/run_time as f64);
+    println!("idk2 run {} times / {} = {:?}µs",run_time,run_time,end2.as_micros() as f64/run_time as f64);
+    println!("idk3 run {} times / {} = {:?}µs",run_time,run_time,end3.as_micros() as f64/run_time as f64);
 }
